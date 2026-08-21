@@ -12,7 +12,6 @@ module.exports = (io) => {
 
     // Global Disconnect Logic
     socket.on('disconnect', () => {
-      io.emit('player_count_update', io.engine.clientsCount);
       if (socket.id === state.adminSocketId) {
         state.adminSocketId = null;
         console.log("⚠️ Admin disconnected");
