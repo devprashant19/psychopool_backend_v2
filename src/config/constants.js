@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "***REMOVED***";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
 const QUESTIONS = {
   1: [

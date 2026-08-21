@@ -4,29 +4,33 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
-// ❌ REDIS REMOVED (Not needed for Single Server)
-// const { createClient } = require("redis"); 
-// const { createAdapter } = require("@socket.io/redis-adapter");
+// Redis for Multi-Server Scaling
+const { createClient } = require("redis"); 
+const { createAdapter } = require("@socket.io/redis-adapter");
 
 // Imports from new structure
 const { connectDB } = require('./src/config/db');
 const socketManager = require('./src/sockets');
 
+// Strict CORS setup
+const allowedOrigins = [
+  process.env.FRONTEND_URL, 
+  "http://localhost:5173", 
+  "http://localhost:8080"
+].filter(Boolean);
+
 // App Setup
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 const server = http.createServer(app);
 
 // Socket Setup
 const io = new Server(server, { 
   cors: {
-    // 👇 ALLOW YOUR VERCEL DOMAIN AND LOCALHOST
-    origin: [
-      "https://psycho-pool-frontend.vercel.app", 
-      "https://psycho-pool-frontend.vercel.app/admin", 
-      "http://localhost:5173", 
-      "http://localhost:3000"
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   } 
@@ -35,12 +39,21 @@ const io = new Server(server, {
 // Initialize Systems
 connectDB();
 
-// --- 🟢 SINGLE SERVER MODE (NO REDIS) ---
-// Since we are running on 1 Cloud Run instance, we use the default memory adapter.
-console.log("✅ Single Server Mode Active: Running without Redis.");
+// --- 🔴 MULTI-SERVER MODE (REDIS ACTIVE) ---
+const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1'; 
+const pubClient = createClient({ url: `redis://${REDIS_HOST}:6379` });
+const subClient = pubClient.duplicate();
 
-// Pass control to your socket logic immediately
-socketManager(io);
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log(`✅ Scalable Multi-Server Mode Active: Redis connected at ${REDIS_HOST}`);
+  
+  // Pass control to your socket logic immediately
+  socketManager(io);
+}).catch(err => {
+  console.error("❌ Redis Connection Error (Cannot start server without Redis):", err);
+  process.exit(1);
+});
 // -----------------------------------------------------------
 
 const PORT = process.env.PORT || 4000;

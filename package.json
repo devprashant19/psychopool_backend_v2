@@ -31,5 +31,8 @@
     "url": "https://github.com/devprashant19/psycho-pool-backend/issues"
   },
   "homepage": "https://github.com/devprashant19/psycho-pool-backend#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }

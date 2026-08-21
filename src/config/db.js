@@ -18,7 +18,7 @@ if (isGCP) {
       dialect: 'postgres',
       host: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
       pool: {
-        max: 20, 
+        max: 10, 
         min: 0,
         acquire: 30000,
         idle: 10000
