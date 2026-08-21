@@ -56,6 +56,18 @@ module.exports = (io, socket) => {
     }
     
 
+    // Validate that the answer belongs to the current question! (Prevents late votes from previous questions)
+    if (state.gameState.currentRound > 0) {
+        const roundQ = QUESTIONS[state.gameState.currentRound];
+        if (roundQ) {
+            const currentQ = roundQ[state.gameState.currentQuestionIndex];
+            if (currentQ && !currentQ.options.includes(data.answer)) {
+                console.warn(`⚠️ Rejected late/invalid vote from ${socket.playerId}: ${data.answer}`);
+                return;
+            }
+        }
+    }
+
     if (state.currentVotes && state.currentVotes[socket.playerId]) {
       return;
     }
