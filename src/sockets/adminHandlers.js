@@ -145,51 +145,43 @@ module.exports = (io, socket) => {
 
 
 
-        if (winningPlayerIds.length > 0) {
-            try {
-                await Player.increment({ score: 10 }, { where: { id: winningPlayerIds } });
-            } catch (dbErr) {
-                console.error("❌ DB UPDATE ERROR:", dbErr);
-            }
-        }
-
-
-        try {
-            for (const [pId, pVote] of Object.entries(state.currentVotes)) {
-                const isCorrect = winningOptions.includes(pVote);
-                const player = await Player.findByPk(pId);
-                if (player) {
-                    const newHistory = [...(player.history || []), {
-                        round: state.gameState.currentRound,
-                        questionIndex: state.gameState.currentQuestionIndex,
-                        answer: pVote,
-                        isCorrect
-                    }];
-                    await player.update({ history: newHistory });
-                }
-            }
-        } catch (histErr) {
-            console.error("❌ HISTORY UPDATE ERROR:", histErr);
-        }
-
+        // 1. Immediately Emit Results to prevent WebSocket timeouts!
         const resultData = { voteCounts, winningOptions, mode: state.winningMode };
         state.gamePhase = 'WAITING_RESULT';
         state.lastMinorityResult = resultData;
         syncState();
         io.emit('minority_result', resultData);
 
-        const allSockets = await io.fetchSockets();
-        allSockets.forEach(s => {
-            if (s.playerId && state.currentVotes[s.playerId]) {
-                const playerVote = state.currentVotes[s.playerId];
-                const isCorrect = winningOptions.includes(playerVote);
-                s.emit('answer_result', { 
-                    isCorrect, 
-                    winningOptions,
-                    scoreDelta: isCorrect ? 10 : 0 
-                });
+        // 2. Perform DB Updates asynchronously in the background so we don't freeze the Node event loop!
+        setTimeout(async () => {
+            try {
+                if (winningPlayerIds.length > 0) {
+                    await Player.increment({ score: 10 }, { where: { id: winningPlayerIds } });
+                }
+
+                // Chunk the history updates to prevent DB connection pool exhaustion
+                const entries = Object.entries(state.currentVotes);
+                for (let i = 0; i < entries.length; i += 50) {
+                    const chunk = entries.slice(i, i + 50);
+                    await Promise.all(chunk.map(async ([pId, pVote]) => {
+                        const isCorrect = winningOptions.includes(pVote);
+                        const player = await Player.findByPk(pId);
+                        if (player) {
+                            const newHistory = [...(player.history || []), {
+                                round: state.gameState.currentRound,
+                                questionIndex: state.gameState.currentQuestionIndex,
+                                answer: pVote,
+                                isCorrect
+                            }];
+                            await player.update({ history: newHistory });
+                        }
+                    }));
+                }
+                console.log("✅ Background DB Updates Complete!");
+            } catch (dbErr) {
+                console.error("❌ BACKGROUND DB ERROR:", dbErr);
             }
-        });
+        }, 0);
 
     } catch (err) {
         console.error("❌ FATAL REVEAL ERROR:", err);
