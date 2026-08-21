@@ -4,12 +4,25 @@ const { QUESTIONS, ADMIN_PASSWORD } = require('../config/constants');
 
 module.exports = (io, socket) => {
 
+  const syncState = () => {
+    if (global.redisPub) {
+      // Don't send massive objects, just core state
+      global.redisPub.publish('state_sync', JSON.stringify({
+        gameState: state.gameState,
+        gamePhase: state.gamePhase,
+        lastMinorityResult: state.lastMinorityResult,
+        winningMode: state.winningMode
+      })).catch(console.error);
+    }
+  };
+
   const isAdmin = () => socket.id === state.adminSocketId;
 
 
   socket.on('admin_toggle_mode', () => {
     if (!isAdmin()) return;
     state.winningMode = state.winningMode === 'MINORITY' ? 'MAJORITY' : 'MINORITY';
+    syncState();
     socket.emit('admin_mode_update', state.winningMode);
   });
 
@@ -47,6 +60,7 @@ module.exports = (io, socket) => {
     state.gameState.currentRound = roundNumber;
     state.gameState.currentQuestionIndex = -1; 
     state.gamePhase = 'ROUND_LOADING'; 
+    syncState();
     io.emit('round_start', { round: roundNumber });
   });
 
@@ -64,11 +78,13 @@ module.exports = (io, socket) => {
     if (state.gameState.currentQuestionIndex < roundQ.length) {
       const q = roundQ[state.gameState.currentQuestionIndex];
       state.gamePhase = 'QUESTION_ACTIVE'; 
+      syncState();
       io.emit('new_question', {
         id: q.id, text: q.text, options: q.options, timeLimit: q.timeLimit, mode: state.winningMode
       });
     } else {
       state.gamePhase = 'LOBBY'; 
+      syncState();
       io.emit('round_over');
     }
   });
@@ -83,6 +99,20 @@ module.exports = (io, socket) => {
     }
 
     try {
+        // FETCH ALL VOTES FROM REDIS HASH FIRST
+        if (global.redisPub) {
+            try {
+                const redisKey = `votes:${state.gameState.currentRound}:${state.gameState.currentQuestionIndex}`;
+                const redisVotes = await global.redisPub.hGetAll(redisKey);
+                if (redisVotes && Object.keys(redisVotes).length > 0) {
+                    state.currentVotes = redisVotes;
+                    console.log(`📥 Fetched ${Object.keys(redisVotes).length} central votes from Redis`);
+                }
+            } catch (err) {
+                console.error("Redis fetch votes error:", err);
+            }
+        }
+
         const voteCounts = {};
         Object.values(state.currentVotes).forEach(vote => {
         voteCounts[vote] = (voteCounts[vote] || 0) + 1;
@@ -145,6 +175,7 @@ module.exports = (io, socket) => {
         const resultData = { voteCounts, winningOptions, mode: state.winningMode };
         state.gamePhase = 'WAITING_RESULT';
         state.lastMinorityResult = resultData;
+        syncState();
         io.emit('minority_result', resultData);
 
         const allSockets = await io.fetchSockets();
@@ -201,6 +232,7 @@ module.exports = (io, socket) => {
   socket.on('admin_end_round', () => {
     if (!isAdmin()) return;
     state.gamePhase = 'LOBBY';
+    syncState();
     io.emit('round_over');
   });
 
@@ -215,6 +247,7 @@ module.exports = (io, socket) => {
     state.currentVotes = {}; 
     state.gamePhase = 'LOBBY'; 
     state.lastMinorityResult = null;
+    syncState();
     io.emit('player_count_update', 0); 
     io.emit('game_reset'); 
   });

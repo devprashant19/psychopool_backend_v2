@@ -49,19 +49,28 @@ module.exports = (io, socket) => {
   });
 
 
-  socket.on('submit_answer', (data) => {
+  socket.on('submit_answer', async (data) => {
     if (!socket.playerId) {
       console.warn(`⚠️ Unauthenticated vote attempt from socket ${socket.id}`);
       return;
     }
     
 
-    if (state.currentVotes[socket.playerId]) {
+    if (state.currentVotes && state.currentVotes[socket.playerId]) {
       return;
     }
 
     if (!state.currentVotes) state.currentVotes = {};
     state.currentVotes[socket.playerId] = data.answer;
+
+    // Save vote to central Redis Hash for multi-instance scaling
+    if (global.redisPub) {
+      try {
+        await global.redisPub.hSet(`votes:${state.gameState.currentRound}:${state.gameState.currentQuestionIndex}`, socket.playerId, data.answer);
+      } catch (err) {
+        console.error('Redis vote save failed:', err);
+      }
+    }
   });
 
 
