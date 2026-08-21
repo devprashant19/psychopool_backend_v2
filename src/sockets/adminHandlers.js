@@ -147,9 +147,6 @@ module.exports = (io, socket) => {
         state.lastMinorityResult = resultData;
         io.emit('minority_result', resultData);
 
-
-        
-
         const allSockets = await io.fetchSockets();
         allSockets.forEach(s => {
             if (s.playerId && state.currentVotes[s.playerId]) {
