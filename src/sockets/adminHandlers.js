@@ -4,14 +4,15 @@ const { QUESTIONS, ADMIN_PASSWORD } = require('../config/constants');
 
 module.exports = (io, socket) => {
 
-  const syncState = () => {
+  const syncState = (clearVotes = false) => {
     if (global.redisPub) {
       // Don't send massive objects, just core state
       global.redisPub.publish('state_sync', JSON.stringify({
         gameState: state.gameState,
         gamePhase: state.gamePhase,
         lastMinorityResult: state.lastMinorityResult,
-        winningMode: state.winningMode
+        winningMode: state.winningMode,
+        clearVotes
       })).catch(console.error);
     }
   };
@@ -74,11 +75,10 @@ module.exports = (io, socket) => {
     if (!roundQ) return;
 
     state.gameState.currentQuestionIndex++; 
-    
     if (state.gameState.currentQuestionIndex < roundQ.length) {
       const q = roundQ[state.gameState.currentQuestionIndex];
       state.gamePhase = 'QUESTION_ACTIVE'; 
-      syncState();
+      syncState(true); // Broadcast to clear votes
       io.emit('new_question', {
         id: q.id, text: q.text, options: q.options, timeLimit: q.timeLimit, mode: state.winningMode
       });

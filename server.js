@@ -56,6 +56,12 @@ Promise.all([pubClient.connect(), subClient.connect(), stateSubClient.connect()]
     try {
       const state = require('./src/state/gameState');
       const newState = JSON.parse(message);
+      
+      if (newState.clearVotes) {
+        state.currentVotes = {};
+      }
+      delete newState.clearVotes;
+      
       // Merge all top-level properties (gameState, gamePhase, etc.)
       Object.assign(state, newState);
       console.log('🔄 State synchronized from Redis Pub/Sub:', state.gamePhase);
