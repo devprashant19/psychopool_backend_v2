@@ -61,8 +61,15 @@ module.exports = (io, socket) => {
     state.gameState.currentRound = roundNumber;
     state.gameState.currentQuestionIndex = -1; 
     state.gamePhase = 'ROUND_LOADING'; 
-    syncState();
+    syncState(true);
     io.emit('round_start', { round: roundNumber });
+    
+    // Clear all hashes for this round just in case
+    if (global.redisPub) {
+        for (let i = 0; i < 10; i++) {
+            global.redisPub.del(`votes:${roundNumber}:${i}`).catch(console.error);
+        }
+    }
   });
 
   socket.on('admin_next_question', () => {
@@ -79,6 +86,12 @@ module.exports = (io, socket) => {
       const q = roundQ[state.gameState.currentQuestionIndex];
       state.gamePhase = 'QUESTION_ACTIVE'; 
       syncState(true); // Broadcast to clear votes
+      
+      // Clear Redis hash for the new question to prevent old data pollution
+      if (global.redisPub) {
+          global.redisPub.del(`votes:${state.gameState.currentRound}:${state.gameState.currentQuestionIndex}`).catch(console.error);
+      }
+
       io.emit('new_question', {
         id: q.id, text: q.text, options: q.options, timeLimit: q.timeLimit, mode: state.winningMode
       });
