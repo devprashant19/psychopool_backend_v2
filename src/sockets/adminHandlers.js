@@ -43,12 +43,14 @@ module.exports = (io, socket) => {
          }
       }
 
+      const totalQuestions = QUESTIONS[state.gameState.currentRound] ? QUESTIONS[state.gameState.currentRound].length : 0;
       socket.emit('admin_state_sync', {
         phase: state.gamePhase,
         round: state.gameState.currentRound,
         question: currentQData,
         result: state.lastMinorityResult,
-        winningMode: state.winningMode 
+        winningMode: state.winningMode,
+        totalQuestions
       });
     } else {
       socket.emit('admin_login_fail');
@@ -62,7 +64,8 @@ module.exports = (io, socket) => {
     state.gameState.currentQuestionIndex = -1; 
     state.gamePhase = 'ROUND_LOADING'; 
     syncState(true);
-    io.emit('round_start', { round: roundNumber });
+    const totalQuestions = QUESTIONS[roundNumber] ? QUESTIONS[roundNumber].length : 0;
+    io.emit('round_start', { round: roundNumber, totalQuestions });
     
     // Clear all hashes for this round just in case
     if (global.redisPub) {
@@ -99,6 +102,31 @@ module.exports = (io, socket) => {
       state.gamePhase = 'LOBBY'; 
       syncState();
       io.emit('round_over');
+    }
+  });
+
+  socket.on('admin_goto_question', ({ questionIndex }) => {
+    if (!isAdmin()) return;
+
+    state.currentVotes = {}; 
+    state.lastMinorityResult = null; 
+    
+    const roundQ = QUESTIONS[state.gameState.currentRound];
+    if (!roundQ) return;
+
+    if (questionIndex >= 0 && questionIndex < roundQ.length) {
+      state.gameState.currentQuestionIndex = questionIndex; 
+      const q = roundQ[questionIndex];
+      state.gamePhase = 'QUESTION_ACTIVE'; 
+      syncState(true);
+      
+      if (global.redisPub) {
+          global.redisPub.del(`votes:${state.gameState.currentRound}:${state.gameState.currentQuestionIndex}`).catch(console.error);
+      }
+
+      io.emit('new_question', {
+        id: q.id, text: q.text, options: q.options, timeLimit: q.timeLimit, mode: state.winningMode
+      });
     }
   });
 
