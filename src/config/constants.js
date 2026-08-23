@@ -5,9 +5,9 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD||'hello1234';
 const QUESTIONS = {
   1: [
     { id: 'q1', text: "Thakur jab offline hota hai toh kahan milta hai?", options: ["Nescafe par", "Hostel ke room mein rote hue", "Library mein", "Gym mein 'body' banate hue"], timeLimit: 20 },
-    { id: 'q2', text: "Lakshay ka secret talent kya hai?", options: ["Khud meme bn jana", "Meetings se gayab hona", "Seniors ko taunt marna", "Sleeping with open eyes"], timeLimit: 20 },
+    { id: 'q2', text: "Divyansh ko Bengali log kyu pasand hain?", options: ["Kyunki Rosogolla", "Secret crush hai", "Bhasha acchi lagti hai", "D"], timeLimit: 20 },
     { id: 'q3', text: "In dono mein se jaldi kaun 'pighal' jata hai?", options: ["Thakur definitely", "Bhushan (chupa rustam)", "Dono sakht launde hain", "Ujjwal sir"], timeLimit: 20 },
-    { id: 'q4', text: "Bhushan ka sabse bada 'bruh' moment kab hota hai?", options: ["Jab code production pe fatt jaye", "Jab Thakur uski credit le jaye", "Jab crush 'bhaiya' bol de", "Jab WiFi na chale"], timeLimit: 20 },
+    { id: 'q4', text: "Bhushan ka sabse bada 'bruh' moment kab hota hai?", options: ["Jab code production pe fatt jaye", "Jab Thakur uska credit le jaye", "Jab crush 'bhaiya' bol de", "Jab WiFi na chale"], timeLimit: 20 },
     { id: 'q5', text: "Agar Bhushan ek supervillain ban jaye toh uska masterplan kya hoga?", options: ["Sabka khana khana", "Thakur ko banish karna", "GDG pe kabza", "Canteen free karna"], timeLimit: 20 }
   ],
   2: [
