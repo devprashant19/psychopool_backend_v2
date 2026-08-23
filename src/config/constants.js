@@ -13,8 +13,9 @@ const QUESTIONS = {
   2: [
     { id: 'q6', text: "Shlok ka 'Simp' level (1-100) kitna hai?", options: ["0 (Sakht launda)", "50 (Kabhi kabhi pighalta hai)", "100 (Ultra Max Pro)", "Limit ke bahar"], timeLimit: 20 },
     { id: 'q7', text: "Ujjwal sir ko agar sach mein gussa aa jaye toh kya hota hai?", options: ["Sbko gaali milti h", "Soham sir ki bolti band", "Kuchni hota", "Kya hi kr lenge"], timeLimit: 20 },
-    { id: 'q8', text: "Soham sir ka sabse dark secret kya hai?", options: ["Wo code ChatGPT se chaapte hain", "Unka koi 'hidden' talent hai", "Unko React nahi aata", "Wo single nahi hain"], timeLimit: 20 },
-    { id: 'q9', text: "Kya Saurabh Sir GB road gaye the?", options: ["Yes", "Yes", "Yes", "Yes"], timeLimit: 20 }
+    { id: 'q8', text: "GDG me kitne couples hai?", options: ["1", "2", "3", "4"], timeLimit: 20 },
+    { id: 'q9', text: "Soham sir ka sabse dark secret kya hai?", options: ["Wo code ChatGPT se chaapte hain", "Unka koi 'hidden' talent hai", "Unko React nahi aata", "Wo single nahi hain"], timeLimit: 20 },
+    { id: 'q10', text: "Kya Saurabh Sir GB road gaye the?", options: ["Yes", "Yes", "Yes", "Yes"], timeLimit: 20 }
   ]
 };
 
