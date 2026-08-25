@@ -19,4 +19,11 @@ const QUESTIONS = {
   ]
 };
 
+// Dynamically prefix options with A., B., C., D. to ensure uniqueness
+Object.keys(QUESTIONS).forEach(round => {
+  QUESTIONS[round].forEach(q => {
+    q.options = q.options.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt}`);
+  });
+});
+
 module.exports = { ADMIN_PASSWORD, QUESTIONS };
