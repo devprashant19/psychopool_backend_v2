@@ -32,7 +32,8 @@ const QUESTIONS = {
     { id: 'q22', text: "Lakdi ki kathi, kathi pe kya?", options: ["Ghoda", "Bhagoda", "Roll", "Pakoda"], timeLimit: 30 },
     { id: 'q23', text: "Who do you want in Hill Fair 2027?", options: ["Subhashini Sahu", "Dolly Chaiwala", "Puneet Superstar", "Samay Raina"], timeLimit: 30 },
     { id: 'q24', text: "Acid mein base daloge toh kya banega?", options: ["Basid", "Ase", "Seid", "Salt + water"], timeLimit: 30 },
-    { id: 'q25', text: "12 March, 1930 ke revolt mein kaun si march hui thi?", options: ["Gandhi march", "Aandhi march", "Dandi march", "Chandi march"], timeLimit: 30 }
+    { id: 'q25', text: "12 March, 1930 ke revolt mein kaun si march hui thi?", options: ["Gandhi march", "Aandhi march", "Dandi march", "Chandi march"], timeLimit: 30 },
+    { id: 'q26', text: "What is the correct option?", options: ["B", "D", "C", "A"], timeLimit: 30 }
   ]
 };
 
