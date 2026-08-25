@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD||'hello1234';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD||'prashant1901';
 
 const QUESTIONS = {
   1: [
